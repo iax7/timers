@@ -56,31 +56,7 @@ const cycleTotal = computed(() => intervalSum.value + props.protocol.restBetween
         <h2 class="card-name">{{ protocol.name }}</h2>
         <span class="card-total">{{ formatTime(totalDuration) }}</span>
       </div>
-
       <p class="card-desc">{{ protocol.description }}</p>
-
-      <div class="card-actions" @click.stop>
-      <button class="card-edit" @click="emit('edit')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-        </svg>
-        EDIT
-      </button>
-      <Transition name="confirm">
-        <div v-if="confirming" class="card-confirm">
-          <span class="card-confirm-text">Delete?</span>
-          <button class="card-confirm-btn card-confirm-btn--yes" @click="confirmDelete">Yes</button>
-          <button class="card-confirm-btn card-confirm-btn--no" @click="cancelDelete">No</button>
-        </div>
-        <button v-else class="card-delete" @click="requestDelete">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="3,6 5,6 21,6"/><path d="M19,6l-1,14a2,2,0,0,1-2,2H8a2,2,0,0,1-2-2L5,6"/><path d="M10,11v6M14,11v6"/><path d="M9,6V4a1,1,0,0,1,1-1h4a1,1,0,0,1,1,1v2"/>
-          </svg>
-          DELETE
-        </button>
-      </Transition>
-    </div>
     </div>
 
     <div class="card-bars">
@@ -129,6 +105,31 @@ const cycleTotal = computed(() => intervalSum.value + props.protocol.restBetween
         <strong>{{ formatTime(cycleTotal) }}</strong> /set
       </span>
     </footer>
+
+    <div class="card-actions" :class="{ 'card-actions--open': confirming }" @click.stop>
+      <button class="card-edit" @click="emit('edit')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
+        EDIT
+      </button>
+      <div class="card-delete-zone">
+        <Transition name="confirm">
+          <div v-if="confirming" class="card-confirm">
+            <span class="card-confirm-text">Delete?</span>
+            <button class="card-confirm-btn card-confirm-btn--yes" @click="confirmDelete">Yes</button>
+            <button class="card-confirm-btn card-confirm-btn--no" @click="cancelDelete">No</button>
+          </div>
+          <button v-else class="card-delete" @click="requestDelete">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3,6 5,6 21,6"/><path d="M19,6l-1,14a2,2,0,0,1-2,2H8a2,2,0,0,1-2-2L5,6"/><path d="M10,11v6M14,11v6"/><path d="M9,6V4a1,1,0,0,1,1-1h4a1,1,0,0,1,1,1v2"/>
+            </svg>
+            DELETE
+          </button>
+        </Transition>
+      </div>
+    </div>
   </article>
 </template>
 
@@ -167,12 +168,24 @@ const cycleTotal = computed(() => intervalSum.value + props.protocol.restBetween
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--border);
   opacity: 0;
   transition: opacity 0.15s;
 }
 
-.card:hover .card-actions {
+.card:hover .card-actions,
+.card-actions--open {
   opacity: 1;
+}
+
+.card-delete-zone {
+  display: grid;
+  place-items: center;
+}
+
+.card-delete-zone > * {
+  grid-area: 1 / 1;
 }
 
 .card-edit,

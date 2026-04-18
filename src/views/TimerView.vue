@@ -204,6 +204,17 @@ function setStatus(n: number): 'done' | 'active' | 'upcoming' {
   return 'upcoming'
 }
 
+const setProgress = computed(() => {
+  if (!protocol.value || phase.value !== 'interval') return 0
+  const p = protocol.value
+  const intervalSum = p.intervals.reduce((a, i) => a + i.duration, 0)
+  if (intervalSum === 0) return 0
+  const completedInSet = p.intervals
+    .slice(0, currentIntervalIndex.value)
+    .reduce((a, i) => a + i.duration, 0)
+  return Math.min(1, (completedInSet + elapsed.value / 1000) / intervalSum)
+})
+
 // ─── Timer engine ─────────────────────────────────────────
 function advance() {
   if (!protocol.value) return
@@ -378,7 +389,7 @@ onUnmounted(() => {
             class="set-dot"
             :class="[`set-dot--${setStatus(n)}`, { 'set-dot--pulsing': setStatus(n) === 'active' && isStarted && !isPaused }]"
             :style="setStatus(n) === 'active'
-            ? { borderColor: currentPhaseColor, color: currentPhaseColor, '--pulse-color': currentPhaseColor }
+            ? { borderColor: currentPhaseColor, color: currentPhaseColor, '--pulse-color': currentPhaseColor, '--set-progress': setProgress }
             : {}"
           >
             <svg v-if="setStatus(n) === 'done'" class="check-icon" viewBox="0 0 24 24" fill="none">
@@ -517,19 +528,34 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 2rem;
-  padding: 2rem 1.25rem;
+  justify-content: flex-start;
+  gap: 1.5rem;
+  padding: 5vh 1.25rem 2rem;
+}
+
+@media (min-width: 640px) {
+  .timer-body {
+    justify-content: center;
+    gap: 2rem;
+    padding: 2rem 1.25rem;
+  }
 }
 
 /* Ring */
 .ring-wrapper {
   position: relative;
-  width: min(76vw, 300px);
-  height: min(76vw, 300px);
+  width: min(72vw, 340px);
+  height: min(72vw, 340px);
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+@media (min-width: 640px) {
+  .ring-wrapper {
+    width: min(55vw, 420px);
+    height: min(55vw, 420px);
+  }
 }
 
 .ring-glow {
@@ -605,8 +631,10 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.8rem;
+  font-size: 0.95rem;
   font-weight: 600;
+  line-height: 1;
+  padding-top: 0.1em;
   transition: all 0.35s ease;
   flex-shrink: 0;
 }
@@ -619,7 +647,12 @@ onUnmounted(() => {
 
 .set-dot--active {
   border: 2px solid;
-  background: transparent;
+  background: conic-gradient(
+    from -90deg,
+    color-mix(in srgb, var(--pulse-color, var(--accent)) 20%, transparent) 0deg,
+    color-mix(in srgb, var(--pulse-color, var(--accent)) 20%, transparent) calc(var(--set-progress, 0) * 360deg),
+    transparent calc(var(--set-progress, 0) * 360deg)
+  );
 }
 
 .set-dot--pulsing {
@@ -633,7 +666,7 @@ onUnmounted(() => {
 
 .set-dot--upcoming {
   border: 1px solid var(--border-bright);
-  color: var(--text-muted);
+  color: var(--text-dim);
 }
 
 .check-icon {
