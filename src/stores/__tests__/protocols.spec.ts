@@ -25,14 +25,14 @@ describe('useProtocolsStore', () => {
     it('loads default protocols when localStorage is empty', () => {
       const store = useProtocolsStore()
       expect(store.protocols).toHaveLength(defaultProtocols.length)
-      expect(store.protocols[0].id).toBe(defaultProtocols[0].id)
+      expect(store.protocols[0]?.id).toBe(defaultProtocols[0]?.id)
     })
 
     it('loads from localStorage when data is present', () => {
       localStorage.setItem('exercise-timer-protocols', JSON.stringify([mockProtocol]))
       const store = useProtocolsStore()
       expect(store.protocols).toHaveLength(1)
-      expect(store.protocols[0].name).toBe('Test Timer')
+      expect(store.protocols[0]?.name).toBe('Test Timer')
     })
   })
 
@@ -42,7 +42,7 @@ describe('useProtocolsStore', () => {
       const before = store.protocols.length
       store.addProtocol(mockProtocol)
       expect(store.protocols).toHaveLength(before + 1)
-      expect(store.protocols.at(-1)?.id).toBe('test-1')
+      expect(store.protocols[store.protocols.length - 1]?.id).toBe('test-1')
     })
   })
 
