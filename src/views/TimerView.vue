@@ -54,22 +54,22 @@ let audioCtx: AudioContext | null = null
 
 function initAudio() {
   if (!audioCtx) audioCtx = new AudioContext()
+  if (audioCtx.state === 'suspended') audioCtx.resume()
 }
 
 function playTone(freq: number, dur: number, type: OscillatorType = 'sine', vol = 0.3) {
   if (!audioCtx) return
-  try {
-    const osc = audioCtx.createOscillator()
-    const gain = audioCtx.createGain()
-    osc.connect(gain)
-    gain.connect(audioCtx.destination)
-    osc.type = type
-    osc.frequency.setValueAtTime(freq, audioCtx.currentTime)
-    gain.gain.setValueAtTime(vol, audioCtx.currentTime)
-    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur)
-    osc.start(audioCtx.currentTime)
-    osc.stop(audioCtx.currentTime + dur)
-  } catch { /* ignore */ }
+  if (audioCtx.state === 'suspended') audioCtx.resume()
+  const osc = audioCtx.createOscillator()
+  const gain = audioCtx.createGain()
+  osc.connect(gain)
+  gain.connect(audioCtx.destination)
+  osc.type = type
+  osc.frequency.setValueAtTime(freq, audioCtx.currentTime)
+  gain.gain.setValueAtTime(vol, audioCtx.currentTime)
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur)
+  osc.start(audioCtx.currentTime)
+  osc.stop(audioCtx.currentTime + dur)
 }
 
 function playCountdownBeep() {
