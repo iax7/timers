@@ -1,0 +1,790 @@
+<script setup lang="ts">
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useProtocolsStore } from '@/stores/protocols'
+import confetti from 'canvas-confetti'
+
+const route = useRoute()
+const router = useRouter()
+const store = useProtocolsStore()
+
+const protocol = computed(() => store.protocols.find((p) => p.id === route.params.id))
+
+// ─── Timer state ──────────────────────────────────────────
+type Phase = 'prep' | 'interval' | 'rest' | 'complete'
+
+const phase = ref<Phase>('prep')
+const currentSet = ref(1)
+const currentIntervalIndex = ref(0)
+const elapsed = ref(0) // ms elapsed in current phase
+const isPaused = ref(false)
+const isStarted = ref(false)
+
+// rAF control
+let rafId: number | null = null
+let phaseStart: number | null = null
+let pausedAt = 0
+let lastBeepSecond = -1
+
+// ─── Wake Lock ────────────────────────────────────────────
+let wakeLock: WakeLockSentinel | null = null
+
+async function acquireWakeLock() {
+  if (!('wakeLock' in navigator)) return
+  try {
+    wakeLock = await navigator.wakeLock.request('screen')
+  } catch {
+    // permission denied or feature unavailable — fail silently
+  }
+}
+
+function releaseWakeLock() {
+  wakeLock?.release()
+  wakeLock = null
+}
+
+async function handleVisibilityChange() {
+  if (document.visibilityState === 'visible' && isStarted.value && !isPaused.value && phase.value !== 'complete') {
+    await acquireWakeLock()
+  }
+}
+
+// ─── Audio ────────────────────────────────────────────────
+let audioCtx: AudioContext | null = null
+
+function initAudio() {
+  if (!audioCtx) audioCtx = new AudioContext()
+}
+
+function playTone(freq: number, dur: number, type: OscillatorType = 'sine', vol = 0.3) {
+  if (!audioCtx) return
+  try {
+    const osc = audioCtx.createOscillator()
+    const gain = audioCtx.createGain()
+    osc.connect(gain)
+    gain.connect(audioCtx.destination)
+    osc.type = type
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime)
+    gain.gain.setValueAtTime(vol, audioCtx.currentTime)
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur)
+    osc.start(audioCtx.currentTime)
+    osc.stop(audioCtx.currentTime + dur)
+  } catch { /* ignore */ }
+}
+
+function playCountdownBeep() {
+  playTone(1100, 0.07, 'square', 0.18)
+}
+
+function playPhaseChange() {
+  playTone(660, 0.1, 'sine', 0.28)
+  setTimeout(() => playTone(990, 0.18, 'sine', 0.32), 120)
+}
+
+function playWorkoutComplete() {
+  ;[523, 659, 784, 1047].forEach((f, i) =>
+    setTimeout(() => playTone(f, 0.28, 'sine', 0.38), i * 110),
+  )
+}
+
+// ─── Haptics ──────────────────────────────────────────────
+function vibrate(pattern: number | number[]) {
+  navigator.vibrate?.(pattern)
+}
+
+// ─── Confetti ─────────────────────────────────────────────
+const CONF_COLORS = ['#1aff7a', '#ff7a1a', '#ff3a5c', '#00c8ff', '#c084fc', '#ffd700']
+
+function launchConfetti() {
+  const opts = { particleCount: 80, spread: 70, colors: CONF_COLORS }
+  confetti({ ...opts, origin: { x: 0.2, y: 0.6 }, angle: 60 })
+  confetti({ ...opts, origin: { x: 0.8, y: 0.6 }, angle: 120 })
+  setTimeout(() => confetti({ particleCount: 60, spread: 100, colors: CONF_COLORS, origin: { x: 0.5, y: 0.3 } }), 300)
+}
+
+// ─── Phase metadata ───────────────────────────────────────
+const COLORS = ['#1aff7a', '#ff7a1a', '#ff3a5c', '#00c8ff', '#c084fc', '#ffd700']
+const PREP_COLOR = '#ffd700'
+const REST_COLOR = '#6060c0'
+
+const currentPhaseColor = computed(() => {
+  if (!protocol.value) return PREP_COLOR
+  if (phase.value === 'prep') return PREP_COLOR
+  if (phase.value === 'rest') return REST_COLOR
+  if (phase.value === 'complete') return '#1aff7a'
+  return COLORS[currentIntervalIndex.value % COLORS.length]
+})
+
+const currentPhaseDurationMs = computed(() => {
+  if (!protocol.value) return 0
+  if (phase.value === 'prep') return protocol.value.prepTime * 1000
+  if (phase.value === 'interval')
+    return (protocol.value.intervals[currentIntervalIndex.value]?.duration ?? 0) * 1000
+  if (phase.value === 'rest') return protocol.value.restBetweenSets * 1000
+  return 0
+})
+
+const currentPhaseLabel = computed(() => {
+  if (!protocol.value) return ''
+  if (phase.value === 'prep') return 'GET READY'
+  if (phase.value === 'rest') return 'REST'
+  if (phase.value === 'complete') return 'DONE!'
+  return (protocol.value.intervals[currentIntervalIndex.value]?.label ?? '').toUpperCase()
+})
+
+// ─── SVG ring ─────────────────────────────────────────────
+const RADIUS = 120
+const CIRCUMFERENCE = 2 * Math.PI * RADIUS // ≈ 753.98
+
+const ringProgress = computed(() => {
+  if (phase.value === 'complete') return 0
+  if (currentPhaseDurationMs.value === 0) return 0
+  return Math.min(1, elapsed.value / currentPhaseDurationMs.value)
+})
+
+const ringDashoffset = computed(() => CIRCUMFERENCE * ringProgress.value)
+
+// ─── Display time ─────────────────────────────────────────
+const phaseRemainingMs = computed(() =>
+  Math.max(0, currentPhaseDurationMs.value - elapsed.value),
+)
+
+const displayTime = computed(() => {
+  const totalSec = Math.ceil(phaseRemainingMs.value / 1000)
+  const m = Math.floor(totalSec / 60)
+  const s = totalSec % 60
+  return `${m}:${String(s).padStart(2, '0')}`
+})
+
+// ─── Total remaining / elapsed ───────────────────────────
+const totalRemainingS = computed(() => {
+  if (!protocol.value || phase.value === 'complete') return 0
+  const p = protocol.value
+  const intervalSum = p.intervals.reduce((a, i) => a + i.duration, 0)
+  let total = Math.ceil(phaseRemainingMs.value / 1000)
+
+  if (phase.value === 'prep') {
+    total += p.sets * intervalSum + (p.sets - 1) * p.restBetweenSets
+  } else if (phase.value === 'interval') {
+    const remainingInSet = p.intervals
+      .slice(currentIntervalIndex.value + 1)
+      .reduce((a, i) => a + i.duration, 0)
+    const setsLeft = p.sets - currentSet.value
+    total += remainingInSet + setsLeft * (intervalSum + p.restBetweenSets)
+  } else if (phase.value === 'rest') {
+    const setsLeft = p.sets - currentSet.value
+    total += setsLeft * (intervalSum + p.restBetweenSets)
+  }
+
+  return Math.max(0, total)
+})
+
+const totalElapsedS = computed(() => {
+  if (!protocol.value) return 0
+  const p = protocol.value
+  const intervalSum = p.intervals.reduce((a, i) => a + i.duration, 0)
+  const totalWorkout = p.prepTime + p.sets * intervalSum + (p.sets - 1) * p.restBetweenSets
+  if (phase.value === 'complete') return totalWorkout
+  return Math.max(0, totalWorkout - totalRemainingS.value)
+})
+
+function formatTotalTime(s: number): string {
+  const m = Math.floor(s / 60)
+  const sec = s % 60
+  if (m === 0) return `${sec}s`
+  return `${m}:${String(sec).padStart(2, '0')}`
+}
+
+// ─── Set dots ─────────────────────────────────────────────
+function setStatus(n: number): 'done' | 'active' | 'upcoming' {
+  if (phase.value === 'complete') return 'done'
+  if (phase.value === 'rest') return n <= currentSet.value ? 'done' : 'upcoming'
+  if (n < currentSet.value) return 'done'
+  if (n === currentSet.value) return 'active'
+  return 'upcoming'
+}
+
+// ─── Timer engine ─────────────────────────────────────────
+function advance() {
+  if (!protocol.value) return
+  const p = protocol.value
+
+  if (phase.value === 'prep') {
+    phase.value = 'interval'
+    currentIntervalIndex.value = 0
+  } else if (phase.value === 'interval') {
+    const nextIdx = currentIntervalIndex.value + 1
+    if (nextIdx < p.intervals.length) {
+      currentIntervalIndex.value = nextIdx
+    } else if (currentSet.value < p.sets) {
+      if (p.restBetweenSets > 0) {
+        phase.value = 'rest'
+      } else {
+        currentSet.value++
+        currentIntervalIndex.value = 0
+      }
+    } else {
+      phase.value = 'complete'
+      elapsed.value = 0
+      playWorkoutComplete()
+      vibrate([300, 100, 300, 100, 300])
+      launchConfetti()
+      releaseWakeLock()
+      return
+    }
+  } else if (phase.value === 'rest') {
+    currentSet.value++
+    currentIntervalIndex.value = 0
+    phase.value = 'interval'
+  }
+
+  playPhaseChange()
+  vibrate([200, 100, 200])
+  lastBeepSecond = -1
+  elapsed.value = 0
+  pausedAt = 0
+  phaseStart = null
+
+  if (!isPaused.value) {
+    rafId = requestAnimationFrame(tick)
+  }
+}
+
+function tick(timestamp: number) {
+  if (phaseStart === null) phaseStart = timestamp
+  elapsed.value = pausedAt + (timestamp - phaseStart)
+
+  // Countdown beep for last 3 seconds of each phase
+  const secondsLeft = Math.ceil((currentPhaseDurationMs.value - elapsed.value) / 1000)
+  if (secondsLeft !== lastBeepSecond && secondsLeft >= 1 && secondsLeft <= 3) {
+    lastBeepSecond = secondsLeft
+    playCountdownBeep()
+  }
+
+  if (elapsed.value >= currentPhaseDurationMs.value) {
+    elapsed.value = currentPhaseDurationMs.value
+    advance()
+    return
+  }
+
+  rafId = requestAnimationFrame(tick)
+}
+
+function startTimer() {
+  phaseStart = null
+  rafId = requestAnimationFrame(tick)
+}
+
+function togglePause() {
+  if (phase.value === 'complete') return
+  if (isPaused.value) {
+    isPaused.value = false
+    pausedAt = elapsed.value
+    phaseStart = null
+    rafId = requestAnimationFrame(tick)
+    acquireWakeLock()
+  } else {
+    isPaused.value = true
+    if (rafId !== null) {
+      cancelAnimationFrame(rafId)
+      rafId = null
+    }
+    pausedAt = elapsed.value
+    releaseWakeLock()
+  }
+}
+
+function handleStart() {
+  initAudio()
+  isStarted.value = true
+  startTimer()
+  acquireWakeLock()
+}
+
+onMounted(() => {
+  document.addEventListener('visibilitychange', handleVisibilityChange)
+})
+
+onUnmounted(() => {
+  if (rafId !== null) cancelAnimationFrame(rafId)
+  audioCtx?.close()
+  releaseWakeLock()
+  document.removeEventListener('visibilitychange', handleVisibilityChange)
+})
+</script>
+
+<template>
+  <div class="timer-page">
+    <header class="timer-header">
+      <button class="back-btn" @click="router.back()" aria-label="Go back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5M12 5l-7 7 7 7"/>
+        </svg>
+      </button>
+      <h1 class="timer-name">{{ protocol?.name ?? 'Timer' }}</h1>
+      <div class="header-gap" />
+    </header>
+
+    <template v-if="protocol">
+      <div class="timer-body">
+        <!-- Ring -->
+        <div class="ring-wrapper">
+          <div
+            class="ring-glow"
+            :style="{ background: `radial-gradient(circle, ${currentPhaseColor}22 0%, transparent 70%)` }"
+          />
+          <svg
+            class="ring-svg"
+            viewBox="0 0 300 300"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
+            <circle
+              cx="150"
+              cy="150"
+              :r="RADIUS"
+              fill="none"
+              stroke="rgba(255,255,255,0.07)"
+              stroke-width="16"
+            />
+            <circle
+              class="ring-progress"
+              :class="{ 'ring-progress--complete': phase === 'complete' }"
+              cx="150"
+              cy="150"
+              :r="RADIUS"
+              fill="none"
+              stroke-width="16"
+              stroke-linecap="butt"
+              :stroke="currentPhaseColor"
+              :stroke-dasharray="CIRCUMFERENCE"
+              :stroke-dashoffset="ringDashoffset"
+            />
+          </svg>
+
+          <div class="ring-center">
+            <div class="ring-time" :style="{ color: currentPhaseColor }">
+              {{ phase === 'complete' ? '0:00' : displayTime }}
+            </div>
+            <div class="ring-phase">{{ currentPhaseLabel }}</div>
+          </div>
+        </div>
+
+        <!-- Set indicators -->
+        <div class="sets-row">
+          <div
+            v-for="n in protocol.sets"
+            :key="n"
+            class="set-dot"
+            :class="[`set-dot--${setStatus(n)}`, { 'set-dot--pulsing': setStatus(n) === 'active' && isStarted && !isPaused }]"
+            :style="setStatus(n) === 'active'
+            ? { borderColor: currentPhaseColor, color: currentPhaseColor, '--pulse-color': currentPhaseColor }
+            : {}"
+          >
+            <svg v-if="setStatus(n) === 'done'" class="check-icon" viewBox="0 0 24 24" fill="none">
+              <polyline points="4,13 10,19 20,6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span v-else>{{ n }}</span>
+          </div>
+        </div>
+
+        <!-- Totals -->
+        <div class="total-row">
+          <div class="total-stat">
+            <span class="total-label">TIME REMAINING</span>
+            <span class="total-time" :class="{ 'total-time--faded': phase === 'complete' }">
+              {{ formatTotalTime(totalRemainingS) }}
+            </span>
+          </div>
+          <div class="total-sep" />
+          <div class="total-stat">
+            <span class="total-label">TIME ELAPSED</span>
+            <span class="total-time">{{ formatTotalTime(totalElapsedS) }}</span>
+          </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+          <!-- Not yet started -->
+          <button v-if="!isStarted" class="start-btn" @click="handleStart">
+            <svg class="ctrl-icon" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="5,3 19,12 5,21"/>
+            </svg>
+            START
+          </button>
+
+          <!-- Running or paused -->
+          <button
+            v-else-if="phase !== 'complete'"
+            class="pause-btn"
+            :class="{ 'pause-btn--paused': isPaused }"
+            @click="togglePause"
+          >
+            <svg v-if="!isPaused" class="ctrl-icon" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="6" y="4" width="4" height="16" rx="1"/>
+              <rect x="14" y="4" width="4" height="16" rx="1"/>
+            </svg>
+            <svg v-else class="ctrl-icon" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="5,3 19,12 5,21"/>
+            </svg>
+            {{ isPaused ? 'RESUME' : 'PAUSE' }}
+          </button>
+
+          <!-- Complete -->
+          <button v-else class="pause-btn pause-btn--done" @click="router.back()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="ctrl-icon">
+              <path d="M19 12H5M12 5l-7 7 7 7"/>
+            </svg>
+            BACK TO TIMERS
+          </button>
+        </div>
+      </div>
+    </template>
+
+    <div v-else class="not-found">
+      <p>Timer not found.</p>
+      <button class="not-found-btn" @click="router.back()">← Go back</button>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.timer-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+
+/* Header */
+.timer-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0 1.25rem;
+  height: 3.5rem;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.back-btn {
+  background: transparent;
+  border: 1px solid var(--border-bright);
+  color: var(--text-dim);
+  width: 2.25rem;
+  height: 2.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color 0.15s, color 0.15s;
+  padding: 0;
+}
+
+.back-btn svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.back-btn:hover {
+  color: var(--text);
+  border-color: var(--text-dim);
+}
+
+.timer-name {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+}
+
+.header-gap {
+  width: 2.25rem;
+  flex-shrink: 0;
+}
+
+/* Body layout */
+.timer-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  padding: 2rem 1.25rem;
+}
+
+/* Ring */
+.ring-wrapper {
+  position: relative;
+  width: min(76vw, 300px);
+  height: min(76vw, 300px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ring-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  transition: background 0.5s ease;
+}
+
+.ring-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.ring-progress {
+  transition: stroke 0.4s ease, stroke-dashoffset 0.05s linear;
+}
+
+.ring-progress--complete {
+  animation: ring-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes ring-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+/* Center of ring */
+.ring-center {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  text-align: center;
+}
+
+.ring-time {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: clamp(2.5rem, 12vw, 3.75rem);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  transition: color 0.4s ease;
+}
+
+.ring-phase {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: clamp(0.85rem, 3.5vw, 1.1rem);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+/* Set dots */
+.sets-row {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.set-dot {
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all 0.35s ease;
+  flex-shrink: 0;
+}
+
+.set-dot--done {
+  background: var(--accent);
+  color: var(--accent-on);
+  border: 2px solid var(--accent);
+}
+
+.set-dot--active {
+  border: 2px solid;
+  background: transparent;
+}
+
+.set-dot--pulsing {
+  animation: dot-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes dot-pulse {
+  0%, 100% { box-shadow: 0 0 4px 0 var(--pulse-color, #1aff7a); }
+  50%       { box-shadow: 0 0 18px 6px var(--pulse-color, #1aff7a); }
+}
+
+.set-dot--upcoming {
+  border: 1px solid var(--border-bright);
+  color: var(--text-muted);
+}
+
+.check-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--accent-on);
+}
+
+/* Totals */
+.total-row {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.total-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.total-sep {
+  width: 1px;
+  height: 2rem;
+  background: var(--border-bright);
+  flex-shrink: 0;
+}
+
+.total-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.14em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.total-time {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--text-dim);
+  transition: opacity 0.3s;
+}
+
+.total-time--faded {
+  opacity: 0.3;
+}
+
+/* Start button */
+.start-btn {
+  width: 100%;
+  height: 3.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  background: var(--accent);
+  border: none;
+  color: var(--accent-on);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.start-btn:hover  { background: var(--accent-hover); }
+.start-btn:active { transform: scale(0.98); }
+
+/* Controls */
+.controls {
+  width: 100%;
+  max-width: 320px;
+}
+
+.pause-btn {
+  width: 100%;
+  height: 3.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  background: transparent;
+  border: 1px solid var(--border-bright);
+  color: var(--text-dim);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.pause-btn:hover {
+  border-color: var(--text-dim);
+  color: var(--text);
+}
+
+.pause-btn--paused {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.pause-btn--paused:hover {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.pause-btn--done {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.pause-btn--done:hover {
+  background: var(--accent);
+  color: var(--accent-on);
+}
+
+.ctrl-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+/* Not found */
+.not-found {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.not-found-btn {
+  background: transparent;
+  border: 1px solid var(--border-bright);
+  color: var(--text-dim);
+  padding: 0.5rem 1.25rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.not-found-btn:hover {
+  color: var(--text);
+  border-color: var(--text-dim);
+}
+</style>

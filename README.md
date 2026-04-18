@@ -1,54 +1,42 @@
-# timers
+# Interval Timer
 
-This template should help get you started developing with Vue 3 in Vite.
+A responsive web app for building and running custom workout interval protocols. Built with Vue 3, TypeScript, and Pinia.
 
-## Recommended IDE Setup
+## Features
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- Create and manage custom workout protocols with multiple intervals per set
+- Visual countdown ring with phase-aware color coding
+- Prep time, configurable sets, and rest periods between sets
+- Audio cues — countdown beeps for the last 3 seconds of each phase, distinct tone on phase change
+- Confetti celebration on workout completion
+- Screen wake lock while the timer is running (prevents display sleep on mobile)
+- Protocols persisted to localStorage
 
-## Recommended Browser Setup
+## Tech Stack
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+- [Vue 3](https://vuejs.org/) with `<script setup>` Composition API
+- [TypeScript](https://www.typescriptlang.org/)
+- [Pinia](https://pinia.vuejs.org/) for state management
+- [Vue Router](https://router.vuejs.org/)
+- [Vite](https://vitejs.dev/)
 
-## Type Support for `.vue` Imports in TS
+## Getting Started
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
-
-```sh
+```bash
 pnpm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
 pnpm dev
 ```
 
-### Type-Check, Compile and Minify for Production
+## Scripts
 
-```sh
-pnpm build
+```bash
+pnpm dev          # dev server with HMR
+pnpm build        # type-check + production build
+pnpm type-check   # vue-tsc only
+pnpm lint         # oxlint + eslint with auto-fix
+pnpm test:unit    # Vitest
 ```
 
-### Run Unit Tests with [Vitest](https://vitest.dev/)
+## License
 
-```sh
-pnpm test:unit
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-pnpm lint
-```
+MIT
