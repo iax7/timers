@@ -282,12 +282,13 @@ function tick(timestamp: number) {
 }
 
 function startTimer() {
+  lastBeepSecond = -1
   phaseStart = null
   rafId = requestAnimationFrame(tick)
 }
 
 function togglePause() {
-  if (phase.value === 'complete') return
+  if (!isStarted.value || phase.value === 'complete') return
   if (isPaused.value) {
     isPaused.value = false
     pausedAt = elapsed.value

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useProtocolsStore } from '@/stores/protocols'
+import { useProtocolsStore, parseProtocols } from '@/stores/protocols'
 
 const DATA_KEY = 'interval-timer-data'
 const URL_KEY = 'interval-timer-data-url'
@@ -78,7 +78,7 @@ async function restoreData() {
     if (!res.ok) throw new Error(`Fetch returned ${res.status}`)
 
     const text = await res.text()
-    JSON.parse(text) // validate before saving
+    parseProtocols(text) // validates structure before saving
     localStorage.setItem(DATA_KEY, text)
     store.loadFromStorage()
     restoreState.value = 'success'

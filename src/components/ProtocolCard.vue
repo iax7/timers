@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, onUnmounted } from 'vue'
 import type { Protocol } from '@/types/protocol'
 
 const props = defineProps<{ protocol: Protocol }>()
-const emit = defineEmits<{ delete: [id: string]; select: []; edit: [] }>()
+const emit = defineEmits<{ delete: [id: string]; select: []; edit: [protocol: Protocol] }>()
 
 const confirming = ref(false)
 let cancelTimer: ReturnType<typeof setTimeout>
+
+onUnmounted(() => clearTimeout(cancelTimer))
 
 function requestDelete() {
   confirming.value = true
@@ -50,7 +52,7 @@ const cycleTotal = computed(() => intervalSum.value + props.protocol.restBetween
 </script>
 
 <template>
-  <article class="card" :style="{ '--card-accent': intervalColor(0) }" @click="emit('select')" role="button" tabindex="0" @keydown.enter="emit('select')">
+  <article class="card" :style="{ '--card-accent': intervalColor(0) }" @click="emit('select')" role="button" tabindex="0" @keydown.enter="emit('select')" @keydown.space.prevent="emit('select')">
     <div class="card-top">
       <div class="card-header">
         <h2 class="card-name">{{ protocol.name }}</h2>
@@ -107,7 +109,7 @@ const cycleTotal = computed(() => intervalSum.value + props.protocol.restBetween
     </footer>
 
     <div class="card-actions" :class="{ 'card-actions--open': confirming }" @click.stop>
-      <button class="card-edit" @click="emit('edit')">
+      <button class="card-edit" @click="emit('edit', props.protocol)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
           <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>

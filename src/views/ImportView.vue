@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useProtocolsStore } from '@/stores/protocols'
+import { useProtocolsStore, parseProtocols } from '@/stores/protocols'
 
 const DATA_KEY = 'interval-timer-data'
 
@@ -13,7 +13,8 @@ const status = ref<'loading' | 'error'>('loading')
 const errorMsg = ref('')
 
 onMounted(async () => {
-  const id = route.query.id as string | undefined
+  const raw = route.query.id
+  const id = Array.isArray(raw) ? raw[0] : raw ?? undefined
   if (!id) {
     errorMsg.value = 'No import ID provided.'
     status.value = 'error'
@@ -25,7 +26,7 @@ onMounted(async () => {
     if (!res.ok) throw new Error(`Could not fetch paste (${res.status})`)
 
     const text = await res.text()
-    JSON.parse(text) // validate
+    parseProtocols(text) // validates structure before saving
     localStorage.setItem(DATA_KEY, text)
     store.loadFromStorage()
     router.replace('/')

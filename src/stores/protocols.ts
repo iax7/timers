@@ -5,14 +5,32 @@ import { defaultProtocols } from '@/data/defaultProtocols'
 
 const STORAGE_KEY = 'interval-timer-data'
 
+export function parseProtocols(json: string): Protocol[] {
+  const data = JSON.parse(json) as unknown
+  if (!Array.isArray(data)) throw new Error('Expected an array of protocols')
+  data.forEach((p, i) => {
+    if (
+      typeof p !== 'object' || p === null ||
+      typeof (p as Record<string, unknown>).id !== 'string' ||
+      typeof (p as Record<string, unknown>).name !== 'string' ||
+      !Array.isArray((p as Record<string, unknown>).intervals)
+    ) throw new Error(`Invalid protocol at index ${i}`)
+  })
+  return data as Protocol[]
+}
+
 export const useProtocolsStore = defineStore('protocols', () => {
   const stored = localStorage.getItem(STORAGE_KEY)
-  const protocols = ref<Protocol[]>(stored ? JSON.parse(stored) : [...defaultProtocols])
+  const protocols = ref<Protocol[]>(stored ? parseProtocols(stored) : [...defaultProtocols])
 
   watch(
     protocols,
     (val) => {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(val))
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(val))
+      } catch {
+        console.error('Failed to persist protocols: storage quota exceeded')
+      }
     },
     { deep: true },
   )
@@ -36,7 +54,7 @@ export const useProtocolsStore = defineStore('protocols', () => {
 
   function loadFromStorage() {
     const raw = localStorage.getItem(STORAGE_KEY)
-    protocols.value = raw ? JSON.parse(raw) : [...defaultProtocols]
+    protocols.value = raw ? parseProtocols(raw) : [...defaultProtocols]
   }
 
   return { protocols, addProtocol, removeProtocol, updateProtocol, resetToDefaults, loadFromStorage }

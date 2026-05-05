@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, computed } from 'vue'
+import { reactive, computed, watch } from 'vue'
 import type { Protocol } from '@/types/protocol'
 
 const props = defineProps<{ protocol?: Protocol }>()
@@ -42,6 +42,19 @@ function removeInterval(uid: string) {
   const index = form.intervals.findIndex((i) => i._uid === uid)
   if (index !== -1) form.intervals.splice(index, 1)
 }
+
+watch(
+  () => props.protocol,
+  (p) => {
+    form.name = p?.name ?? ''
+    form.description = p?.description ?? ''
+    form.sets = p?.sets ?? 8
+    form.prepTime = p?.prepTime ?? 10
+    form.restBetweenSets = p?.restBetweenSets ?? 10
+    form.intervals = p?.intervals.map((i) => ({ _uid: crypto.randomUUID(), ...i })) ??
+      [{ _uid: crypto.randomUUID(), label: '', duration: 20 }]
+  },
+)
 
 function handleSave() {
   if (!isValid.value) return

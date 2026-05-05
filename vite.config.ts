@@ -6,8 +6,10 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
+const base = process.env.GITHUB_ACTIONS ? '/timers/' : '/'
+
 export default defineConfig({
-  base: process.env.GITHUB_ACTIONS ? '/timers/' : '/',
+  base,
   define: (() => {
     const now = new Date()
     const pad = (n: number) => String(n).padStart(2, '0')
@@ -32,8 +34,8 @@ export default defineConfig({
         background_color: '#0c0c14',
         display: 'standalone',
         orientation: 'portrait',
-        start_url: '/',
-        scope: '/',
+        start_url: base,
+        scope: base,
         icons: [
           {
             src: 'pwa-192.png',

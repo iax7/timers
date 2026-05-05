@@ -79,7 +79,7 @@ function handleSelect(id: string) {
 
       <div v-else class="protocol-grid">
         <ProtocolCard
-          @edit="handleEdit(protocol)"
+          @edit="handleEdit"
           v-for="protocol in protocols"
           :key="protocol.id"
           :protocol="protocol"
