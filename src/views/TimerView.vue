@@ -328,7 +328,7 @@ onUnmounted(() => {
 <template>
   <div class="timer-page">
     <header class="timer-header">
-      <button class="back-btn" @click="router.push('/')" aria-label="Go back">
+      <button class="back-btn" @click="router.replace('/')" aria-label="Go back">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M19 12H5M12 5l-7 7 7 7"/>
         </svg>
@@ -443,7 +443,7 @@ onUnmounted(() => {
           </button>
 
           <!-- Complete -->
-          <button v-else class="pause-btn pause-btn--done" @click="router.push('/')">
+          <button v-else class="pause-btn pause-btn--done" @click="router.replace('/')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="ctrl-icon">
               <path d="M19 12H5M12 5l-7 7 7 7"/>
             </svg>
@@ -455,7 +455,7 @@ onUnmounted(() => {
 
     <div v-else class="not-found">
       <p>Timer not found.</p>
-      <button class="not-found-btn" @click="router.push('/')">← Go back</button>
+      <button class="not-found-btn" @click="router.replace('/')">← Go back</button>
     </div>
   </div>
 </template>

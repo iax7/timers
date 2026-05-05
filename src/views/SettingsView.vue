@@ -93,7 +93,7 @@ async function restoreData() {
   <div class="settings">
     <header class="site-header">
       <div class="site-header-inner">
-        <button class="back-btn" @click="router.push('/')">
+        <button class="back-btn" @click="router.replace('/')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="15 18 9 12 15 6"/>
           </svg>

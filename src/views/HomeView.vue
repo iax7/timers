@@ -38,7 +38,7 @@ function handleDelete(id: string) {
 }
 
 function handleSelect(id: string) {
-  router.push(`/timer/${id}`)
+  router.replace(`/timer/${id}`)
 }
 </script>
 
@@ -51,12 +51,12 @@ function handleSelect(id: string) {
           <span class="site-logo-text">INTERVAL<span class="site-logo-accent">TIMER</span></span>
         </div>
         <div class="header-actions">
-          <button class="header-btn header-btn--ghost" @click="router.push('/settings')" aria-label="Settings">
+          <button class="header-btn header-btn--ghost" @click="router.replace('/settings')" aria-label="Settings">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
             </svg>
           </button>
-          <button class="header-btn" @click="showForm = true">
+          <button class="header-btn header-btn--new-timer" @click="showForm = true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
@@ -199,13 +199,17 @@ function handleSelect(id: string) {
 }
 
 .header-actions {
-  display: none;
+  display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
+.header-btn--new-timer {
+  display: none;
+}
+
 @media (min-width: 640px) {
-  .header-actions {
+  .header-btn--new-timer {
     display: flex;
   }
 }
