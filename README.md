@@ -1,6 +1,6 @@
 # Interval Timer
 
-A responsive web app for building and running custom workout interval protocols. Built with Vue 3, TypeScript, and Pinia.
+A responsive PWA for building and running custom workout interval protocols. Installable on Android, iOS, and macOS. Built with Vue 3, TypeScript, and Pinia.
 
 ## Features
 
@@ -10,7 +10,9 @@ A responsive web app for building and running custom workout interval protocols.
 - Audio cues — countdown beeps for the last 3 seconds of each phase, distinct tone on phase change
 - Confetti celebration on workout completion
 - Screen wake lock while the timer is running (prevents display sleep on mobile)
-- Protocols persisted to localStorage
+- Protocols persisted to `localStorage`
+- **PWA** — installable on Android, iOS, and macOS; works offline
+- **Data sync** — upload protocols to [dpaste.com](https://dpaste.com) and restore via shareable import link
 
 ## Tech Stack
 
@@ -18,7 +20,7 @@ A responsive web app for building and running custom workout interval protocols.
 - [TypeScript](https://www.typescriptlang.org/)
 - [Pinia](https://pinia.vuejs.org/) for state management
 - [Vue Router](https://router.vuejs.org/)
-- [Vite](https://vitejs.dev/)
+- [Vite](https://vitejs.dev/) + [vite-plugin-pwa](https://vite-pwa-org.netlify.app/)
 
 ## Getting Started
 
