@@ -489,7 +489,7 @@ onUnmounted(() => {
   justify-content: center;
   cursor: pointer;
   flex-shrink: 0;
-  transition: border-color 0.15s, color 0.15s;
+  transition: border-color 0.18s ease-out, color 0.18s ease-out, transform 0.15s ease-out;
   padding: 0;
 }
 
@@ -733,10 +733,13 @@ onUnmounted(() => {
   font-weight: 800;
   letter-spacing: 0.16em;
   cursor: pointer;
-  transition: background 0.15s, transform 0.1s;
+  transition: background 0.18s ease-out, box-shadow 0.18s ease-out, transform 0.15s ease-out;
 }
 
-.start-btn:hover  { background: var(--accent-hover); }
+.start-btn:hover  {
+  background: var(--accent-hover);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--accent) 40%, transparent);
+}
 .start-btn:active { transform: scale(0.98); }
 
 /* Controls */
@@ -760,7 +763,7 @@ onUnmounted(() => {
   font-weight: 700;
   letter-spacing: 0.12em;
   cursor: pointer;
-  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  transition: border-color 0.18s ease-out, color 0.18s ease-out, background 0.18s ease-out, box-shadow 0.18s ease-out, transform 0.15s ease-out;
 }
 
 .pause-btn:hover {
@@ -785,6 +788,7 @@ onUnmounted(() => {
 .pause-btn--done:hover {
   background: var(--accent);
   color: var(--accent-on);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 35%, transparent);
 }
 
 .ctrl-icon {
@@ -813,7 +817,7 @@ onUnmounted(() => {
   font-size: 0.8rem;
   letter-spacing: 0.06em;
   cursor: pointer;
-  transition: border-color 0.15s, color 0.15s;
+  transition: border-color 0.18s ease-out, color 0.18s ease-out, transform 0.15s ease-out;
 }
 
 .not-found-btn:hover {

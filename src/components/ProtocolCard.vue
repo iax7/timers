@@ -202,7 +202,7 @@ const cycleTotal = computed(() => intervalSum.value + props.protocol.restBetween
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  transition: color 0.18s ease-out, border-color 0.18s ease-out, background 0.18s ease-out, transform 0.15s ease-out;
   line-height: 1.4;
 }
 
@@ -246,7 +246,7 @@ const cycleTotal = computed(() => intervalSum.value + props.protocol.restBetween
   border: 1px solid;
   cursor: pointer;
   background: transparent;
-  transition: background 0.12s, color 0.12s;
+  transition: background 0.18s ease-out, color 0.18s ease-out, transform 0.15s ease-out;
   line-height: 1.4;
 }
 

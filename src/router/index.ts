@@ -14,6 +14,16 @@ const router = createRouter({
       name: 'timer',
       component: () => import('../views/TimerView.vue'),
     },
+    {
+      path: '/settings',
+      name: 'settings',
+      component: () => import('../views/SettingsView.vue'),
+    },
+    {
+      path: '/import',
+      name: 'import',
+      component: () => import('../views/ImportView.vue'),
+    },
   ],
 })
 

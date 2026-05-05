@@ -50,12 +50,19 @@ function handleSelect(id: string) {
           <span class="site-logo-icon">◎</span>
           <span class="site-logo-text">INTERVAL<span class="site-logo-accent">TIMER</span></span>
         </div>
-        <button class="header-btn" @click="showForm = true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-          </svg>
-          New Timer
-        </button>
+        <div class="header-actions">
+          <button class="header-btn header-btn--ghost" @click="router.push('/settings')" aria-label="Settings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+          </button>
+          <button class="header-btn" @click="showForm = true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            New Timer
+          </button>
+        </div>
       </div>
     </header>
 
@@ -147,7 +154,7 @@ function handleSelect(id: string) {
 }
 
 .header-btn {
-  display: none;
+  display: flex;
   align-items: center;
   gap: 0.4rem;
   background: var(--accent);
@@ -159,7 +166,7 @@ function handleSelect(id: string) {
   font-weight: 800;
   letter-spacing: 0.08em;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background 0.18s ease-out, box-shadow 0.18s ease-out, transform 0.15s ease-out;
 }
 
 .header-btn svg {
@@ -170,10 +177,35 @@ function handleSelect(id: string) {
 
 .header-btn:hover {
   background: var(--accent-hover);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.header-btn--ghost {
+  background: transparent;
+  border: 1px solid var(--border-bright);
+  color: var(--text-dim);
+  padding: 0.4rem;
+}
+
+.header-btn--ghost svg {
+  width: 16px;
+  height: 16px;
+}
+
+.header-btn--ghost:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--text);
+  border-color: var(--text-dim);
+}
+
+.header-actions {
+  display: none;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 @media (min-width: 640px) {
-  .header-btn {
+  .header-actions {
     display: flex;
   }
 }
@@ -265,7 +297,7 @@ function handleSelect(id: string) {
   letter-spacing: 0.08em;
   cursor: pointer;
   border: 1px solid;
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.18s ease-out, color 0.18s ease-out, box-shadow 0.18s ease-out, transform 0.15s ease-out;
   background: transparent;
 }
 
@@ -277,6 +309,7 @@ function handleSelect(id: string) {
 .btn-empty--primary:hover {
   background: var(--accent);
   color: var(--accent-on);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 35%, transparent);
 }
 
 .btn-empty--ghost {
@@ -305,7 +338,7 @@ function handleSelect(id: string) {
   line-height: 1;
   cursor: pointer;
   box-shadow: 0 0 20px color-mix(in srgb, var(--accent) 40%, transparent);
-  transition: transform 0.15s, box-shadow 0.15s;
+  transition: transform 0.18s ease-out, box-shadow 0.18s ease-out;
   z-index: 20;
   display: flex;
   align-items: center;

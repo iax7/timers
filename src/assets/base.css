@@ -22,6 +22,10 @@ button {
   font-family: inherit;
 }
 
+button:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
 input {
   font-family: inherit;
   border-radius: 0;

@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 import type { Protocol } from '@/types/protocol'
 import { defaultProtocols } from '@/data/defaultProtocols'
 
-const STORAGE_KEY = 'exercise-timer-protocols'
+const STORAGE_KEY = 'interval-timer-data'
 
 export const useProtocolsStore = defineStore('protocols', () => {
   const stored = localStorage.getItem(STORAGE_KEY)
@@ -34,5 +34,10 @@ export const useProtocolsStore = defineStore('protocols', () => {
     protocols.value = [...defaultProtocols]
   }
 
-  return { protocols, addProtocol, removeProtocol, updateProtocol, resetToDefaults }
+  function loadFromStorage() {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    protocols.value = raw ? JSON.parse(raw) : [...defaultProtocols]
+  }
+
+  return { protocols, addProtocol, removeProtocol, updateProtocol, resetToDefaults, loadFromStorage }
 })

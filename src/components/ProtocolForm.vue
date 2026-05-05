@@ -254,7 +254,7 @@ function handleSave() {
   cursor: pointer;
   line-height: 1;
   padding: 0 0.25rem;
-  transition: color 0.15s;
+  transition: color 0.18s ease-out, transform 0.15s ease-out;
 }
 
 .sheet-close:hover {
@@ -371,7 +371,7 @@ function handleSave() {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition: color 0.15s, border-color 0.15s;
+  transition: color 0.18s ease-out, border-color 0.18s ease-out, transform 0.15s ease-out;
   line-height: 1;
 }
 
@@ -395,7 +395,7 @@ function handleSave() {
   letter-spacing: 0.06em;
   cursor: pointer;
   width: 100%;
-  transition: border-color 0.15s, color 0.15s;
+  transition: border-color 0.18s ease-out, color 0.18s ease-out, transform 0.15s ease-out;
   text-align: center;
 }
 
@@ -423,7 +423,7 @@ function handleSave() {
   text-transform: uppercase;
   cursor: pointer;
   border: 1px solid transparent;
-  transition: all 0.15s;
+  transition: background 0.18s ease-out, color 0.18s ease-out, border-color 0.18s ease-out, box-shadow 0.18s ease-out, transform 0.15s ease-out;
 }
 
 .btn--ghost {
@@ -447,6 +447,7 @@ function handleSave() {
 .btn--primary:hover:not(:disabled) {
   background: var(--accent-hover);
   border-color: var(--accent-hover);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 35%, transparent);
 }
 
 .btn--primary:disabled {
