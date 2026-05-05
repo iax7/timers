@@ -1,4 +1,5 @@
 import { fileURLToPath, URL } from 'node:url'
+import { execSync } from 'node:child_process'
 
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
@@ -15,9 +16,12 @@ export default defineConfig({
     const pad = (n: number) => String(n).padStart(2, '0')
     const date = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+    let sha = 'unknown'
+    try { sha = execSync('git rev-parse --short=8 HEAD').toString().trim() } catch {}
     return {
       __BUILD_DATE__: JSON.stringify(date),
       __BUILD_TZ__: JSON.stringify(tz),
+      __BUILD_SHA__: JSON.stringify(sha),
     }
   })(),
   plugins: [

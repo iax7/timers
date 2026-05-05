@@ -17,6 +17,7 @@ const errorMsg = ref('')
 const copied = ref(false)
 const buildDate = __BUILD_DATE__
 const buildTz = __BUILD_TZ__
+const buildSha = __BUILD_SHA__
 
 const shareUrl = computed(() => {
   if (!savedUrl.value) return null
@@ -171,8 +172,12 @@ async function restoreData() {
         <h2 class="section-title">About</h2>
         <div class="card">
           <div class="card-row">
-            <span class="card-label">Build date</span>
-            <span class="build-date">{{ buildDate }} <span class="build-tz">{{ buildTz }}</span></span>
+            <span class="card-label">Build</span>
+            <span class="card-text-mono">{{ buildDate }} <span class="build-tz">{{ buildTz }}</span></span>
+          </div>
+          <div class="card-row">
+            <span class="card-label">Commit</span>
+            <span class="card-text-mono">{{ buildSha }}</span>
           </div>
         </div>
       </section>
@@ -253,17 +258,17 @@ async function restoreData() {
 .section {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
 .section-title {
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-weight: 700;
   letter-spacing: 0.15em;
   color: var(--text-muted);
   text-transform: uppercase;
-  margin: 0 0 0.25rem;
+  margin: 0 0 0.375rem;
 }
 
 /* Cards */
@@ -271,10 +276,10 @@ async function restoreData() {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 1rem 1.25rem;
+  padding: 1.25rem 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.875rem;
 }
 
 .card-row {
@@ -414,7 +419,7 @@ async function restoreData() {
   border: 1px solid color-mix(in srgb, var(--accent-red) 25%, transparent);
 }
 
-.build-date {
+.card-text-mono {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 0.8rem;
   color: var(--text-dim);
