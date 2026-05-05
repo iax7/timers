@@ -15,6 +15,8 @@ const uploadState = ref<'idle' | 'loading' | 'success' | 'error'>('idle')
 const restoreState = ref<'idle' | 'loading' | 'success' | 'error'>('idle')
 const errorMsg = ref('')
 const copied = ref(false)
+const buildDate = __BUILD_DATE__
+const buildTz = __BUILD_TZ__
 
 const shareUrl = computed(() => {
   if (!savedUrl.value) return null
@@ -163,6 +165,16 @@ async function restoreData() {
         <Transition name="fade">
           <div v-if="errorMsg" class="status status--err">{{ errorMsg }}</div>
         </Transition>
+      </section>
+
+      <section class="section" style="margin-top: 2rem">
+        <h2 class="section-title">About</h2>
+        <div class="card">
+          <div class="card-row">
+            <span class="card-label">Build date</span>
+            <span class="build-date">{{ buildDate }} <span class="build-tz">{{ buildTz }}</span></span>
+          </div>
+        </div>
       </section>
     </main>
   </div>
@@ -400,6 +412,18 @@ async function restoreData() {
   background: color-mix(in srgb, var(--accent-red) 12%, transparent);
   color: var(--accent-red);
   border: 1px solid color-mix(in srgb, var(--accent-red) 25%, transparent);
+}
+
+.build-date {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  letter-spacing: 0.04em;
+}
+
+.build-tz {
+  color: var(--text-muted);
+  font-size: 0.72rem;
 }
 
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }

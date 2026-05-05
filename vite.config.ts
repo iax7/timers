@@ -8,6 +8,16 @@ import { VitePWA } from 'vite-plugin-pwa'
 // https://vite.dev/config/
 export default defineConfig({
   base: process.env.GITHUB_ACTIONS ? '/timers/' : '/',
+  define: (() => {
+    const now = new Date()
+    const pad = (n: number) => String(n).padStart(2, '0')
+    const date = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+    return {
+      __BUILD_DATE__: JSON.stringify(date),
+      __BUILD_TZ__: JSON.stringify(tz),
+    }
+  })(),
   plugins: [
     vue(),
     vueDevTools(),

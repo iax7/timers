@@ -327,7 +327,7 @@ onUnmounted(() => {
 <template>
   <div class="timer-page">
     <header class="timer-header">
-      <button class="back-btn" @click="router.back()" aria-label="Go back">
+      <button class="back-btn" @click="router.push('/')" aria-label="Go back">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M19 12H5M12 5l-7 7 7 7"/>
         </svg>
@@ -442,7 +442,7 @@ onUnmounted(() => {
           </button>
 
           <!-- Complete -->
-          <button v-else class="pause-btn pause-btn--done" @click="router.back()">
+          <button v-else class="pause-btn pause-btn--done" @click="router.push('/')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="ctrl-icon">
               <path d="M19 12H5M12 5l-7 7 7 7"/>
             </svg>
@@ -454,7 +454,7 @@ onUnmounted(() => {
 
     <div v-else class="not-found">
       <p>Timer not found.</p>
-      <button class="not-found-btn" @click="router.back()">← Go back</button>
+      <button class="not-found-btn" @click="router.push('/')">← Go back</button>
     </div>
   </div>
 </template>
@@ -489,7 +489,7 @@ onUnmounted(() => {
   justify-content: center;
   cursor: pointer;
   flex-shrink: 0;
-  transition: border-color 0.18s ease-out, color 0.18s ease-out, transform 0.15s ease-out;
+  transition: background 0.18s ease-out, border-color 0.18s ease-out, color 0.18s ease-out, transform 0.15s ease-out;
   padding: 0;
 }
 
@@ -499,6 +499,7 @@ onUnmounted(() => {
 }
 
 .back-btn:hover {
+  background: rgba(255, 255, 255, 0.07);
   color: var(--text);
   border-color: var(--text-dim);
 }
