@@ -2,6 +2,9 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useProtocolsStore, parseProtocols } from '@/stores/protocols'
+import IconChevronLeft from '@/icons/IconChevronLeft.vue'
+import IconCopy from '@/icons/IconCopy.vue'
+import IconCheck from '@/icons/IconCheck.vue'
 
 const DATA_KEY = 'interval-timer-data'
 const URL_KEY = 'interval-timer-data-url'
@@ -95,9 +98,7 @@ async function restoreData() {
     <header class="site-header">
       <div class="site-header-inner">
         <button class="back-btn" @click="router.replace('/')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="15 18 9 12 15 6"/>
-          </svg>
+          <IconChevronLeft />
           Back
         </button>
         <span class="page-title">SETTINGS</span>
@@ -137,12 +138,8 @@ async function restoreData() {
               <div v-if="savedUrl" class="url-row">
                 <span class="card-url">{{ savedUrl }}</span>
                 <button class="copy-btn" :class="{ 'copy-btn--ok': copied }" @click="copyShareUrl" :aria-label="copied ? 'Copied' : 'Copy share link'">
-                  <svg v-if="!copied" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                  </svg>
-                  <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="20 6 9 17 4 12"/>
-                  </svg>
+                  <IconCopy v-if="!copied" />
+                  <IconCheck v-else />
                 </button>
               </div>
               <span v-else class="card-desc card-desc--muted">No URL saved yet.</span>

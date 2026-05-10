@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+import IconDownload from '@/icons/IconDownload.vue'
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>
@@ -56,7 +57,7 @@ onUnmounted(() => {
       class="install-banner"
     >
       <div class="install-content">
-        <span class="install-icon">⬇</span>
+        <IconDownload class="install-icon" />
         <div class="install-text">
           <span class="install-title">Install app</span>
           <span v-if="isIOS" class="install-hint">
@@ -101,6 +102,7 @@ onUnmounted(() => {
 
 .install-icon {
   font-size: 1.25rem;
+  color: var(--text);
   flex-shrink: 0;
 }
 

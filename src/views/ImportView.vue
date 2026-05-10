@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useProtocolsStore, parseProtocols } from '@/stores/protocols'
 import type { Protocol } from '@/types/protocol'
+import IconCheck from '@/icons/IconCheck.vue'
 
 const DATA_KEY = 'interval-timer-data'
 const URL_KEY = 'interval-timer-data-url'
@@ -87,9 +88,7 @@ function cancelImport() {
     </div>
     <div v-else-if="status === 'success'" class="state">
       <span class="success-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="20 6 9 17 4 12"/>
-        </svg>
+        <IconCheck />
       </span>
       <p class="state-text state-text--ok">Imported {{ importedCount }} timer{{ importedCount === 1 ? '' : 's' }}</p>
       <button class="back-btn back-btn--primary" @click="router.replace('/')">Continue</button>
