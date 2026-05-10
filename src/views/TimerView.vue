@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useProtocolsStore } from '@/stores/protocols'
 import IconRestart from '@/icons/IconRestart.vue'
 import IconArrowLeft from '@/icons/IconArrowLeft.vue'
+import IconChevronLeft from '@/icons/IconChevronLeft.vue'
 import IconCheck from '@/icons/IconCheck.vue'
 import IconPlay from '@/icons/IconPlay.vue'
 import IconPause from '@/icons/IconPause.vue'
@@ -351,12 +352,14 @@ onUnmounted(() => {
 
 <template>
   <div class="timer-page">
-    <header class="timer-header">
-      <button class="back-btn" @click="router.replace('/')" aria-label="Go back">
-        <IconArrowLeft />
-      </button>
-      <h1 class="timer-name">{{ protocol?.name ?? 'Timer' }}</h1>
-      <div class="header-gap" />
+    <header class="site-header">
+      <div class="site-header-inner">
+        <button class="back-btn" @click="router.replace('/')">
+          <IconChevronLeft />
+          Back
+        </button>
+        <span class="page-title">{{ protocol?.name ?? 'Timer' }}</span>
+      </div>
     </header>
 
     <template v-if="protocol">
@@ -485,34 +488,46 @@ onUnmounted(() => {
 }
 
 /* Header */
-.timer-header {
+.site-header {
+  border-bottom: 1px solid var(--border);
+  padding: 0 1.25rem;
+  position: sticky;
+  top: 0;
+  background: rgba(12, 12, 20, 0.9);
+  backdrop-filter: blur(8px);
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+.site-header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0 1.25rem;
+  gap: 1rem;
   height: 3.5rem;
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
 }
 
 .back-btn {
-  background: transparent;
-  border: 1px solid var(--border-bright);
-  color: var(--text-dim);
-  width: 2.25rem;
-  height: 2.25rem;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 0.4rem;
+  background: transparent;
+  border: 1px solid var(--border-bright);
+  border-radius: 6px;
+  color: var(--text-dim);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   cursor: pointer;
-  flex-shrink: 0;
+  padding: 0.4rem 0.85rem;
   transition: background 0.18s ease-out, border-color 0.18s ease-out, color 0.18s ease-out, transform 0.15s ease-out;
-  padding: 0;
 }
 
 .back-btn svg {
-  width: 1rem;
-  height: 1rem;
+  width: 16px;
+  height: 16px;
 }
 
 .back-btn:hover {
@@ -521,23 +536,17 @@ onUnmounted(() => {
   border-color: var(--text-dim);
 }
 
-.timer-name {
+.page-title {
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 1.1rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 1rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
   color: var(--text);
-  flex: 1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin: 0;
-}
-
-.header-gap {
-  width: 2.25rem;
-  flex-shrink: 0;
+  flex: 1;
+  min-width: 0;
 }
 
 /* Body layout */

@@ -212,17 +212,18 @@ async function restoreData() {
 .back-btn {
   display: flex;
   align-items: center;
-  gap: 0.3rem;
+  gap: 0.4rem;
   background: transparent;
-  border: none;
+  border: 1px solid var(--border-bright);
+  border-radius: 6px;
   color: var(--text-dim);
   font-family: 'Barlow Condensed', sans-serif;
   font-size: 0.9rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   cursor: pointer;
-  padding: 0.3rem 0.5rem;
-  transition: color 0.18s ease-out, transform 0.15s ease-out;
+  padding: 0.4rem 0.85rem;
+  transition: background 0.18s ease-out, border-color 0.18s ease-out, color 0.18s ease-out, transform 0.15s ease-out;
 }
 
 .back-btn svg {
@@ -231,7 +232,9 @@ async function restoreData() {
 }
 
 .back-btn:hover {
+  background: rgba(255, 255, 255, 0.07);
   color: var(--text);
+  border-color: var(--text-dim);
 }
 
 .page-title {
