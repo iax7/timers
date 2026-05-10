@@ -2,6 +2,11 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useProtocolsStore } from '@/stores/protocols'
+import IconRestart from '@/icons/IconRestart.vue'
+import IconArrowLeft from '@/icons/IconArrowLeft.vue'
+import IconCheck from '@/icons/IconCheck.vue'
+import IconPlay from '@/icons/IconPlay.vue'
+import IconPause from '@/icons/IconPause.vue'
 import confetti from 'canvas-confetti'
 
 const route = useRoute()
@@ -313,6 +318,25 @@ function handleStart() {
   acquireWakeLock()
 }
 
+function restartTimer() {
+  if (rafId !== null) {
+    cancelAnimationFrame(rafId)
+    rafId = null
+  }
+  phase.value = 'prep'
+  currentSet.value = 1
+  currentIntervalIndex.value = 0
+  elapsed.value = 0
+  isPaused.value = false
+  pausedAt = 0
+  phaseStart = null
+  lastBeepSecond = -1
+  initAudio()
+  isStarted.value = true
+  startTimer()
+  acquireWakeLock()
+}
+
 onMounted(() => {
   document.addEventListener('visibilitychange', handleVisibilityChange)
 })
@@ -329,9 +353,7 @@ onUnmounted(() => {
   <div class="timer-page">
     <header class="timer-header">
       <button class="back-btn" @click="router.replace('/')" aria-label="Go back">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M19 12H5M12 5l-7 7 7 7"/>
-        </svg>
+        <IconArrowLeft />
       </button>
       <h1 class="timer-name">{{ protocol?.name ?? 'Timer' }}</h1>
       <div class="header-gap" />
@@ -361,7 +383,6 @@ onUnmounted(() => {
             />
             <circle
               class="ring-progress"
-              :class="{ 'ring-progress--complete': phase === 'complete' }"
               cx="150"
               cy="150"
               :r="RADIUS"
@@ -393,9 +414,7 @@ onUnmounted(() => {
             ? { borderColor: currentPhaseColor, color: currentPhaseColor, '--pulse-color': currentPhaseColor, '--set-progress': setProgress }
             : {}"
           >
-            <svg v-if="setStatus(n) === 'done'" class="check-icon" viewBox="0 0 24 24" fill="none">
-              <polyline points="4,13 10,19 20,6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
+            <IconCheck v-if="setStatus(n) === 'done'" class="check-icon" />
             <span v-else>{{ n }}</span>
           </div>
         </div>
@@ -419,9 +438,7 @@ onUnmounted(() => {
         <div class="controls">
           <!-- Not yet started -->
           <button v-if="!isStarted" class="start-btn" @click="handleStart">
-            <svg class="ctrl-icon" viewBox="0 0 24 24" fill="currentColor">
-              <polygon points="5,3 19,12 5,21"/>
-            </svg>
+            <IconPlay class="ctrl-icon" />
             START
           </button>
 
@@ -432,23 +449,22 @@ onUnmounted(() => {
             :class="{ 'pause-btn--paused': isPaused }"
             @click="togglePause"
           >
-            <svg v-if="!isPaused" class="ctrl-icon" viewBox="0 0 24 24" fill="currentColor">
-              <rect x="6" y="4" width="4" height="16" rx="1"/>
-              <rect x="14" y="4" width="4" height="16" rx="1"/>
-            </svg>
-            <svg v-else class="ctrl-icon" viewBox="0 0 24 24" fill="currentColor">
-              <polygon points="5,3 19,12 5,21"/>
-            </svg>
+            <IconPause v-if="!isPaused" class="ctrl-icon" />
+            <IconPlay v-else class="ctrl-icon" />
             {{ isPaused ? 'RESUME' : 'PAUSE' }}
           </button>
 
           <!-- Complete -->
-          <button v-else class="pause-btn pause-btn--done" @click="router.replace('/')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="ctrl-icon">
-              <path d="M19 12H5M12 5l-7 7 7 7"/>
-            </svg>
-            BACK TO TIMERS
-          </button>
+          <template v-else>
+            <button class="pause-btn pause-btn--done" @click="restartTimer">
+              <IconRestart class="ctrl-icon" />
+              RESTART
+            </button>
+            <button class="pause-btn pause-btn--done" @click="router.replace('/')">
+              <IconArrowLeft class="ctrl-icon" />
+              BACK TO TIMERS
+            </button>
+          </template>
         </div>
       </div>
     </template>
@@ -577,15 +593,6 @@ onUnmounted(() => {
 
 .ring-progress {
   transition: stroke 0.4s ease, stroke-dashoffset 0.05s linear;
-}
-
-.ring-progress--complete {
-  animation: ring-pulse 1.8s ease-in-out infinite;
-}
-
-@keyframes ring-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.45; }
 }
 
 /* Center of ring */
@@ -748,6 +755,9 @@ onUnmounted(() => {
 .controls {
   width: 100%;
   max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
 }
 
 .pause-btn {
