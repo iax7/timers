@@ -29,7 +29,7 @@ describe('useProtocolsStore', () => {
     })
 
     it('loads from localStorage when data is present', () => {
-      localStorage.setItem('exercise-timer-protocols', JSON.stringify([mockProtocol]))
+      localStorage.setItem('interval-timer-data', JSON.stringify([mockProtocol]))
       const store = useProtocolsStore()
       expect(store.protocols).toHaveLength(1)
       expect(store.protocols[0]?.name).toBe('Test Timer')
@@ -104,7 +104,7 @@ describe('useProtocolsStore', () => {
       store.addProtocol(mockProtocol)
       await nextTick()
       const stored: Protocol[] = JSON.parse(
-        localStorage.getItem('exercise-timer-protocols') ?? '[]',
+        localStorage.getItem('interval-timer-data') ?? '[]',
       )
       expect(stored.some((p) => p.id === 'test-1')).toBe(true)
     })
@@ -115,7 +115,7 @@ describe('useProtocolsStore', () => {
       store.removeProtocol('test-1')
       await nextTick()
       const stored: Protocol[] = JSON.parse(
-        localStorage.getItem('exercise-timer-protocols') ?? '[]',
+        localStorage.getItem('interval-timer-data') ?? '[]',
       )
       expect(stored.some((p) => p.id === 'test-1')).toBe(false)
     })

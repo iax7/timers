@@ -1,5 +1,5 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
+import HomeView from '@/views/HomeView.vue'
 
 const router = createRouter({
   history: createWebHashHistory(import.meta.env.BASE_URL),
@@ -12,17 +12,17 @@ const router = createRouter({
     {
       path: '/timer/:id',
       name: 'timer',
-      component: () => import('../views/TimerView.vue'),
+      component: () => import('@/views/TimerView.vue'),
     },
     {
       path: '/settings',
       name: 'settings',
-      component: () => import('../views/SettingsView.vue'),
+      component: () => import('@/views/SettingsView.vue'),
     },
     {
       path: '/import',
       name: 'import',
-      component: () => import('../views/ImportView.vue'),
+      component: () => import('@/views/ImportView.vue'),
     },
   ],
 })

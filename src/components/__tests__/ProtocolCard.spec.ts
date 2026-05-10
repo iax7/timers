@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
-import ProtocolCard from '../ProtocolCard.vue'
+import ProtocolCard from '@/components/ProtocolCard.vue'
 import type { Protocol } from '@/types/protocol'
 
 const tabata: Protocol = {
