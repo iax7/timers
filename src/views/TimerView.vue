@@ -666,7 +666,7 @@ onUnmounted(() => {
 .set-dot--active {
   border: 2px solid;
   background: conic-gradient(
-    from -90deg,
+    from 0deg,
     color-mix(in srgb, var(--pulse-color, var(--accent)) 20%, transparent) 0deg,
     color-mix(in srgb, var(--pulse-color, var(--accent)) 20%, transparent) calc(var(--set-progress, 0) * 360deg),
     transparent calc(var(--set-progress, 0) * 360deg)
