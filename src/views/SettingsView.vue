@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useProtocolsStore, parseProtocols } from '@/stores/protocols'
+import { useAudioThemeStore } from '@/stores/audioTheme'
+import { useAudio } from '@/audio/useAudio'
+import { themes } from '@/audio/themes'
 import IconChevronLeft from '@/icons/IconChevronLeft.vue'
 import IconCopy from '@/icons/IconCopy.vue'
 import IconCheck from '@/icons/IconCheck.vue'
@@ -12,6 +15,16 @@ const DPASTE_API = 'https://dpaste.com/api/v2/'
 
 const router = useRouter()
 const store = useProtocolsStore()
+const audioTheme = useAudioThemeStore()
+const audio = useAudio(() => audioTheme.currentTheme)
+
+function selectTheme(id: string) {
+  audioTheme.setTheme(id)
+  audio.init()
+  audio.phaseChange()
+}
+
+onUnmounted(() => audio.close())
 
 const savedUrl = ref<string | null>(null)
 const uploadState = ref<'idle' | 'loading' | 'success' | 'error'>('idle')
@@ -163,6 +176,30 @@ async function restoreData() {
         <Transition name="fade">
           <div v-if="errorMsg" class="status status--err">{{ errorMsg }}</div>
         </Transition>
+      </section>
+
+      <section class="section" style="margin-top: 2rem">
+        <h2 class="section-title">Sound</h2>
+        <div class="card">
+          <div class="card-row">
+            <div class="card-info">
+              <span class="card-label">Theme</span>
+              <span class="card-desc">Tap to preview and select.</span>
+            </div>
+          </div>
+          <div class="theme-grid">
+            <button
+              v-for="theme in themes"
+              :key="theme.id"
+              class="theme-btn"
+              :class="{ 'theme-btn--active': audioTheme.themeId === theme.id }"
+              @click="selectTheme(theme.id)"
+            >
+              <span class="theme-btn-name">{{ theme.name }}</span>
+              <span class="theme-btn-desc">{{ theme.description }}</span>
+            </button>
+          </div>
+        </div>
       </section>
 
       <section class="section" style="margin-top: 2rem">
@@ -433,4 +470,61 @@ async function restoreData() {
 
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
+
+/* Sound theme picker */
+.theme-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+.theme-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  background: transparent;
+  border: 1px solid var(--border-bright);
+  border-radius: 8px;
+  padding: 0.7rem 0.85rem;
+  color: var(--text-dim);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.18s ease-out, border-color 0.18s ease-out, color 0.18s ease-out, transform 0.15s ease-out;
+}
+
+.theme-btn:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--text);
+  border-color: var(--text-dim);
+}
+
+.theme-btn--active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.theme-btn--active:hover {
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.theme-btn-name {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.theme-btn-desc {
+  font-size: 0.7rem;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+}
+
+.theme-btn--active .theme-btn-desc {
+  color: color-mix(in srgb, var(--accent) 70%, var(--text-dim));
+}
 </style>

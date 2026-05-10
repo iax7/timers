@@ -2,6 +2,8 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useProtocolsStore } from '@/stores/protocols'
+import { useAudioThemeStore } from '@/stores/audioTheme'
+import { useAudio } from '@/audio/useAudio'
 import IconRestart from '@/icons/IconRestart.vue'
 import IconArrowLeft from '@/icons/IconArrowLeft.vue'
 import IconChevronLeft from '@/icons/IconChevronLeft.vue'
@@ -13,6 +15,8 @@ import confetti from 'canvas-confetti'
 const route = useRoute()
 const router = useRouter()
 const store = useProtocolsStore()
+const audioTheme = useAudioThemeStore()
+const audio = useAudio(() => audioTheme.currentTheme)
 
 const protocol = computed(() => store.protocols.find((p) => p.id === route.params.id))
 
@@ -53,44 +57,6 @@ async function handleVisibilityChange() {
   if (document.visibilityState === 'visible' && isStarted.value && !isPaused.value && phase.value !== 'complete') {
     await acquireWakeLock()
   }
-}
-
-// ─── Audio ────────────────────────────────────────────────
-let audioCtx: AudioContext | null = null
-
-function initAudio() {
-  if (!audioCtx) audioCtx = new AudioContext()
-  if (audioCtx.state === 'suspended') audioCtx.resume()
-}
-
-function playTone(freq: number, dur: number, type: OscillatorType = 'sine', vol = 0.3) {
-  if (!audioCtx) return
-  if (audioCtx.state === 'suspended') audioCtx.resume()
-  const osc = audioCtx.createOscillator()
-  const gain = audioCtx.createGain()
-  osc.connect(gain)
-  gain.connect(audioCtx.destination)
-  osc.type = type
-  osc.frequency.setValueAtTime(freq, audioCtx.currentTime)
-  gain.gain.setValueAtTime(vol, audioCtx.currentTime)
-  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur)
-  osc.start(audioCtx.currentTime)
-  osc.stop(audioCtx.currentTime + dur)
-}
-
-function playCountdownBeep() {
-  playTone(1100, 0.07, 'square', 0.18)
-}
-
-function playPhaseChange() {
-  playTone(660, 0.1, 'sine', 0.28)
-  setTimeout(() => playTone(990, 0.18, 'sine', 0.32), 120)
-}
-
-function playWorkoutComplete() {
-  ;[523, 659, 784, 1047].forEach((f, i) =>
-    setTimeout(() => playTone(f, 0.28, 'sine', 0.38), i * 110),
-  )
 }
 
 // ─── Haptics ──────────────────────────────────────────────
@@ -243,7 +209,7 @@ function advance() {
     } else {
       phase.value = 'complete'
       elapsed.value = 0
-      playWorkoutComplete()
+      audio.workoutComplete()
       vibrate([300, 100, 300, 100, 300])
       launchConfetti()
       releaseWakeLock()
@@ -255,7 +221,7 @@ function advance() {
     phase.value = 'interval'
   }
 
-  playPhaseChange()
+  audio.phaseChange()
   vibrate([200, 100, 200])
   lastBeepSecond = -1
   elapsed.value = 0
@@ -275,7 +241,7 @@ function tick(timestamp: number) {
   const secondsLeft = Math.ceil((currentPhaseDurationMs.value - elapsed.value) / 1000)
   if (secondsLeft !== lastBeepSecond && secondsLeft >= 1 && secondsLeft <= 3) {
     lastBeepSecond = secondsLeft
-    playCountdownBeep()
+    audio.countdownBeep()
   }
 
   if (elapsed.value >= currentPhaseDurationMs.value) {
@@ -313,7 +279,7 @@ function togglePause() {
 }
 
 function handleStart() {
-  initAudio()
+  audio.init()
   isStarted.value = true
   startTimer()
   acquireWakeLock()
@@ -332,7 +298,7 @@ function restartTimer() {
   pausedAt = 0
   phaseStart = null
   lastBeepSecond = -1
-  initAudio()
+  audio.init()
   isStarted.value = true
   startTimer()
   acquireWakeLock()
@@ -344,7 +310,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   if (rafId !== null) cancelAnimationFrame(rafId)
-  audioCtx?.close()
+  audio.close()
   releaseWakeLock()
   document.removeEventListener('visibilitychange', handleVisibilityChange)
 })
