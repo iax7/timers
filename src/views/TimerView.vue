@@ -447,7 +447,7 @@ onUnmounted(() => {
 
 <style scoped>
 .timer-page {
-  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   background: var(--bg);
@@ -521,14 +521,13 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: safe center;
   gap: 1.5rem;
-  padding: 5vh 1.25rem 2rem;
+  padding: 1.5rem 1.25rem 2rem;
 }
 
 @media (min-width: 640px) {
   .timer-body {
-    justify-content: center;
     gap: 2rem;
     padding: 2rem 1.25rem;
   }
