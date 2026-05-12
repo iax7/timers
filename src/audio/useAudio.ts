@@ -15,9 +15,13 @@ export function useAudio(getTheme: () => SoundTheme) {
   }
 
   function withCtx(fn: (ctx: AudioContext) => void) {
-    if (!ctx.value) return
-    if (ctx.value.state === 'suspended') ctx.value.resume()
-    fn(ctx.value)
+    const c = ctx.value
+    if (!c) return
+    if (c.state === 'suspended') {
+      c.resume().then(() => setTimeout(() => fn(c), 80))
+    } else {
+      fn(c)
+    }
   }
 
   return {

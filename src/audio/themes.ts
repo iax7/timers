@@ -35,22 +35,20 @@ interface Note {
 }
 
 function playSequence(ctx: AudioContext, notes: Note[], gapMs: number) {
-  notes.forEach((n, i) =>
-    setTimeout(() => playTone(ctx, n.freq, n.dur, n.type, n.vol), i * gapMs),
-  )
+  notes.forEach((n, i) => setTimeout(() => playTone(ctx, n.freq, n.dur, n.type, n.vol), i * gapMs))
 }
 
 /* Themes */
 
 /*
- * Identity:  The original, soft sines
+ * Identity:  The default, soft sines
  * Waveforms: sine + subtle square
  * Notes:     C-E-G-C complete
  */
 const minimal: SoundTheme = {
   id: 'minimal',
-  name: 'Minimal',
-  description: 'Soft sine tones, the original',
+  name: 'Default',
+  description: 'Subtle and balanced, fits any session',
   countdownBeep: (ctx) => playTone(ctx, 1100, 0.07, 'square', 0.18),
   phaseChange: (ctx) => {
     playTone(ctx, 660, 0.1, 'sine', 0.28)
