@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+import { useRoute } from 'vue-router'
 import IconDownload from '@/icons/IconDownload.vue'
+
+const route = useRoute()
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>
@@ -53,7 +56,7 @@ onUnmounted(() => {
 <template>
   <Transition name="slide-up">
     <div
-      v-if="!isInstalled && !dismissed && (deferredPrompt || isIOS)"
+      v-if="route.name === 'home' && !isInstalled && !dismissed && (deferredPrompt || isIOS)"
       class="install-banner"
     >
       <div class="install-content">
