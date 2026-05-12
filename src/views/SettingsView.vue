@@ -17,11 +17,27 @@ const router = useRouter()
 const store = useProtocolsStore()
 const audioTheme = useAudioThemeStore()
 const audio = useAudio(() => audioTheme.currentTheme)
+const isDev = import.meta.env.DEV
 
 function selectTheme(id: string) {
   audioTheme.setTheme(id)
   audio.init()
   audio.phaseChange()
+}
+
+function previewBeep() {
+  audio.init()
+  audio.countdownBeep()
+}
+
+function previewPhase() {
+  audio.init()
+  audio.phaseChange()
+}
+
+function previewComplete() {
+  audio.init()
+  audio.workoutComplete()
 }
 
 onUnmounted(() => audio.close())
@@ -125,7 +141,7 @@ async function restoreData() {
         <div class="card">
           <div class="card-row">
             <div class="card-info">
-              <span class="card-label">Upload to dpaste</span>
+              <span class="card-label">Backup to cloud</span>
               <span class="card-desc">Saves a copy of your timers to dpaste.com and stores the link.</span>
             </div>
             <button
@@ -142,9 +158,9 @@ async function restoreData() {
               Uploaded successfully.
             </div>
           </Transition>
-        </div>
 
-        <div class="card">
+          <hr class="card-divider" />
+
           <div class="card-row">
             <div class="card-info">
               <span class="card-label">Restore from URL</span>
@@ -198,6 +214,14 @@ async function restoreData() {
               <span class="theme-btn-name">{{ theme.name }}</span>
               <span class="theme-btn-desc">{{ theme.description }}</span>
             </button>
+          </div>
+          <div v-if="isDev" class="theme-preview">
+            <span class="theme-preview-label">Preview active theme (dev)</span>
+            <div class="theme-preview-btns">
+              <button class="preview-btn" @click="previewBeep">Beep</button>
+              <button class="preview-btn" @click="previewPhase">Phase</button>
+              <button class="preview-btn" @click="previewComplete">Complete</button>
+            </div>
           </div>
         </div>
       </section>
@@ -326,6 +350,13 @@ async function restoreData() {
   gap: 1rem;
 }
 
+.card-divider {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 0.25rem 0;
+  width: 100%;
+}
+
 .card-info {
   display: flex;
   flex-direction: column;
@@ -432,6 +463,7 @@ async function restoreData() {
 }
 
 .action-btn--ghost:not(:disabled):hover {
+  background: rgba(255, 255, 255, 0.07);
   color: var(--text);
   border-color: var(--text-dim);
 }
@@ -526,5 +558,48 @@ async function restoreData() {
 
 .theme-btn--active .theme-btn-desc {
   color: color-mix(in srgb, var(--accent) 70%, var(--text-dim));
+}
+
+.theme-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--border);
+}
+
+.theme-preview-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.theme-preview-btns {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.4rem;
+}
+
+.preview-btn {
+  background: transparent;
+  border: 1px solid var(--border-bright);
+  border-radius: 6px;
+  padding: 0.55rem 0.4rem;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: background 0.18s ease-out, border-color 0.18s ease-out, color 0.18s ease-out, transform 0.15s ease-out;
+}
+
+.preview-btn:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--text);
+  border-color: var(--text-dim);
 }
 </style>

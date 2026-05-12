@@ -64,17 +64,17 @@ const minimal: SoundTheme = {
 
 /*
  * Identity:  Punchy, energetic
- * Waveforms: sawtooth + triangle
- * Notes:     Low double-thump phase, power-fanfare complete
+ * Waveforms: sawtooth
+ * Notes:     Rising power-chord phase, power-fanfare complete
  */
 const gym: SoundTheme = {
   id: 'gym',
   name: 'Gym',
   description: 'Punchy buzz tones, energetic',
-  countdownBeep: (ctx) => playTone(ctx, 880, 0.08, 'sawtooth', 0.22),
+  countdownBeep: (ctx) => playTone(ctx, 880, 0.08, 'sawtooth', 0.26),
   phaseChange: (ctx) => {
-    playTone(ctx, 250, 0.18, 'triangle', 0.3)
-    setTimeout(() => playTone(ctx, 250, 0.18, 'triangle', 0.3), 230)
+    playTone(ctx, 440, 0.1, 'sawtooth', 0.32)
+    setTimeout(() => playTone(ctx, 660, 0.22, 'sawtooth', 0.34), 110)
   },
   workoutComplete: (ctx) =>
     playSequence(
@@ -109,13 +109,16 @@ const zen: SoundTheme = {
 /*
  * Identity:  8-bit nostalgia
  * Waveforms: square waves
- * Notes:     1up jingle complete
+ * Notes:     SMB 1-up jingle — 5 rapid eighths + sustained E6 finale
  */
 const retro: SoundTheme = {
   id: 'retro',
   name: 'Retro 8-bit',
   description: 'Square wave chiptune blips',
-  countdownBeep: (ctx) => playTone(ctx, 1500, 0.05, 'square', 0.2),
+  countdownBeep: (ctx) => {
+    playTone(ctx, 1047, 0.04, 'square', 0.22)
+    setTimeout(() => playTone(ctx, 1319, 0.07, 'square', 0.26), 35)
+  },
   phaseChange: (ctx) => {
     playTone(ctx, 988, 0.08, 'square', 0.25)
     setTimeout(() => playTone(ctx, 1319, 0.12, 'square', 0.25), 90)
@@ -123,13 +126,15 @@ const retro: SoundTheme = {
   workoutComplete: (ctx) =>
     playSequence(
       ctx,
-      [659, 784, 1319, 1047, 1175, 1568].map((freq) => ({
-        freq,
-        dur: 0.1,
-        type: 'square',
-        vol: 0.28,
-      })),
-      70,
+      [
+        { freq: 659, dur: 0.12, type: 'square', vol: 0.28 },
+        { freq: 784, dur: 0.12, type: 'square', vol: 0.28 },
+        { freq: 1319, dur: 0.12, type: 'square', vol: 0.28 },
+        { freq: 1047, dur: 0.12, type: 'square', vol: 0.28 },
+        { freq: 1175, dur: 0.12, type: 'square', vol: 0.28 },
+        { freq: 1319, dur: 0.7, type: 'square', vol: 0.3 },
+      ],
+      120,
     ),
 }
 
