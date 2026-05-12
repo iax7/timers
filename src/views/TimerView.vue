@@ -742,8 +742,8 @@ onUnmounted(() => {
   justify-content: center;
   gap: 0.6rem;
   background: transparent;
-  border: 1px solid var(--border-bright);
-  color: var(--text-dim);
+  border: 1px solid #8a7300;
+  color: #c9a800;
   font-family: 'Barlow Condensed', sans-serif;
   font-size: 1.1rem;
   font-weight: 700;
@@ -753,8 +753,9 @@ onUnmounted(() => {
 }
 
 .pause-btn:hover {
-  border-color: var(--text-dim);
-  color: var(--text);
+  border-color: #ffd700;
+  color: #ffd700;
+  background: rgba(255, 215, 0, 0.08);
 }
 
 .pause-btn--paused {
