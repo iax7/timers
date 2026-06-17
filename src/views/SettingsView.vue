@@ -47,8 +47,14 @@ const uploadState = ref<'idle' | 'loading' | 'success' | 'error'>('idle')
 const restoreState = ref<'idle' | 'loading' | 'success' | 'error'>('idle')
 const errorMsg = ref('')
 const copied = ref(false)
-const buildDate = __BUILD_DATE__
-const buildTz = __BUILD_TZ__
+const buildDate = new Date(__BUILD_DATE__).toLocaleString('sv-SE', {
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false,
+}).replace(',', '')
 const buildSha = __BUILD_SHA__
 
 const shareUrl = computed(() => {
@@ -144,11 +150,7 @@ async function restoreData() {
               <span class="card-label">Backup to cloud</span>
               <span class="card-desc">Saves a copy of your timers to dpaste.com and stores the link.</span>
             </div>
-            <button
-              class="action-btn action-btn--primary"
-              :disabled="uploadState === 'loading'"
-              @click="uploadData"
-            >
+            <button class="action-btn action-btn--primary" :disabled="uploadState === 'loading'" @click="uploadData">
               {{ uploadState === 'loading' ? 'Uploading…' : 'Upload' }}
             </button>
           </div>
@@ -166,18 +168,16 @@ async function restoreData() {
               <span class="card-label">Restore from URL</span>
               <div v-if="savedUrl" class="url-row">
                 <span class="card-url">{{ savedUrl }}</span>
-                <button class="copy-btn" :class="{ 'copy-btn--ok': copied }" @click="copyShareUrl" :aria-label="copied ? 'Copied' : 'Copy share link'">
+                <button class="copy-btn" :class="{ 'copy-btn--ok': copied }" @click="copyShareUrl"
+                  :aria-label="copied ? 'Copied' : 'Copy share link'">
                   <IconCopy v-if="!copied" />
                   <IconCheck v-else />
                 </button>
               </div>
               <span v-else class="card-desc card-desc--muted">No URL saved yet.</span>
             </div>
-            <button
-              class="action-btn action-btn--ghost"
-              :disabled="!savedUrl || restoreState === 'loading'"
-              @click="restoreData"
-            >
+            <button class="action-btn action-btn--ghost" :disabled="!savedUrl || restoreState === 'loading'"
+              @click="restoreData">
               {{ restoreState === 'loading' ? 'Restoring…' : 'Restore' }}
             </button>
           </div>
@@ -204,13 +204,8 @@ async function restoreData() {
             </div>
           </div>
           <div class="theme-grid">
-            <button
-              v-for="theme in themes"
-              :key="theme.id"
-              class="theme-btn"
-              :class="{ 'theme-btn--active': audioTheme.themeId === theme.id }"
-              @click="selectTheme(theme.id)"
-            >
+            <button v-for="theme in themes" :key="theme.id" class="theme-btn"
+              :class="{ 'theme-btn--active': audioTheme.themeId === theme.id }" @click="selectTheme(theme.id)">
               <span class="theme-btn-name">{{ theme.name }}</span>
               <span class="theme-btn-desc">{{ theme.description }}</span>
             </button>
@@ -231,7 +226,7 @@ async function restoreData() {
         <div class="card">
           <div class="card-row">
             <span class="card-label">Build</span>
-            <span class="card-text-mono">{{ buildDate }} <span class="build-tz">{{ buildTz }}</span></span>
+            <span class="card-text-mono">{{ buildDate }}</span>
           </div>
           <div class="card-row">
             <span class="card-label">Commit</span>
@@ -495,13 +490,15 @@ async function restoreData() {
   letter-spacing: 0.04em;
 }
 
-.build-tz {
-  color: var(--text-muted);
-  font-size: 0.72rem;
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s;
 }
 
-.fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
-.fade-enter-from, .fade-leave-to { opacity: 0; }
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
 
 /* Sound theme picker */
 .theme-grid {

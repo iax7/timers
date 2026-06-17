@@ -11,19 +11,18 @@ const base = process.env.GITHUB_ACTIONS ? '/timers/' : '/'
 
 export default defineConfig({
   base,
-  define: (() => {
-    const now = new Date()
-    const pad = (n: number) => String(n).padStart(2, '0')
-    const date = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
-    let sha = 'unknown'
-    try { sha = execSync('git rev-parse --short=8 HEAD').toString().trim() } catch {}
-    return {
-      __BUILD_DATE__: JSON.stringify(date),
-      __BUILD_TZ__: JSON.stringify(tz),
-      __BUILD_SHA__: JSON.stringify(sha),
-    }
-  })(),
+  define: {
+    __BUILD_DATE__: JSON.stringify(new Date().toISOString()),
+    __BUILD_SHA__: JSON.stringify(
+      (() => {
+        try {
+          return execSync('git rev-parse --short=8 HEAD').toString().trim()
+        } catch {
+          return 'unknown'
+        }
+      })(),
+    ),
+  },
   plugins: [
     vue(),
     vueDevTools(),
@@ -60,7 +59,7 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        globPatterns: ['**/*.{js,css,html,svg,woff2}'],
         clientsClaim: false,
         runtimeCaching: [
           {
@@ -87,7 +86,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
 })
