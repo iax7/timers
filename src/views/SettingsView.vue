@@ -43,8 +43,10 @@ function previewComplete() {
 onUnmounted(() => audio.close())
 
 const savedUrl = ref<string | null>(null)
+const backupDate = ref<string | null>(null)
 const uploadState = ref<'idle' | 'loading' | 'success' | 'error'>('idle')
 const restoreState = ref<'idle' | 'loading' | 'success' | 'error'>('idle')
+const clipboardState = ref<'idle' | 'loading' | 'success' | 'error'>('idle')
 const errorMsg = ref('')
 const copied = ref(false)
 const buildDate = new Date(__BUILD_DATE__).toLocaleString('sv-SE', {
@@ -65,7 +67,17 @@ const shareUrl = computed(() => {
 })
 
 onMounted(() => {
-  savedUrl.value = localStorage.getItem(URL_KEY)
+  const raw = localStorage.getItem(URL_KEY)
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw)
+      savedUrl.value = parsed.url
+      backupDate.value = parsed.date
+    } catch {
+      // Not JSON — shouldn't happen, ignore
+      savedUrl.value = null
+    }
+  }
 })
 
 async function copyShareUrl() {
@@ -96,8 +108,10 @@ async function uploadData() {
     if (!res.ok) throw new Error(`dpaste returned ${res.status}`)
 
     const url = (await res.text()).trim()
-    localStorage.setItem(URL_KEY, url)
+    const date = new Date().toISOString()
+    localStorage.setItem(URL_KEY, JSON.stringify({ url, date }))
     savedUrl.value = url
+    backupDate.value = date
     uploadState.value = 'success'
   } catch (e) {
     errorMsg.value = e instanceof Error ? e.message : 'Upload failed.'
@@ -124,6 +138,44 @@ async function restoreData() {
   } catch (e) {
     errorMsg.value = e instanceof Error ? e.message : 'Restore failed.'
     restoreState.value = 'error'
+  }
+}
+
+async function importFromClipboard() {
+  clipboardState.value = 'loading'
+  errorMsg.value = ''
+
+  try {
+    const text = (await navigator.clipboard.readText()).trim()
+    if (!text) throw new Error('Clipboard is empty.')
+
+    // Extract paste ID from share link format: .../timers/#/import?id=XXXXX
+    const shareMatch = text.match(/[#/]import\?id=([A-Za-z0-9]+)/)
+    // Or direct dpaste URL: https://dpaste.com/XXXXX
+    const dpasteMatch = text.match(/^https?:\/\/dpaste\.com\/([A-Za-z0-9]+)\/?$/)
+
+    const pasteId = shareMatch?.[1] ?? dpasteMatch?.[1]
+    if (!pasteId) throw new Error('Clipboard does not contain a valid dpaste or share URL.')
+
+    const rawUrl = `https://dpaste.com/${pasteId}.txt`
+    const res = await fetch(rawUrl)
+    if (!res.ok) throw new Error(`Fetch returned ${res.status}`)
+
+    const json = await res.text()
+    parseProtocols(json)
+    localStorage.setItem(DATA_KEY, json)
+
+    const dpasteUrl = `https://dpaste.com/${pasteId}`
+    const date = new Date().toISOString()
+    localStorage.setItem(URL_KEY, JSON.stringify({ url: dpasteUrl, date }))
+    savedUrl.value = dpasteUrl
+    backupDate.value = date
+
+    store.loadFromStorage()
+    clipboardState.value = 'success'
+  } catch (e) {
+    errorMsg.value = e instanceof Error ? e.message : 'Import failed.'
+    clipboardState.value = 'error'
   }
 }
 </script>
@@ -161,6 +213,10 @@ async function restoreData() {
             </div>
           </Transition>
 
+          <div v-if="backupDate" class="card-row">
+            <span class="card-desc">Last backup: <span class="card-text-mono">{{ new Date(backupDate).toLocaleString() }}</span></span>
+          </div>
+
           <hr class="card-divider" />
 
           <div class="card-row">
@@ -185,6 +241,25 @@ async function restoreData() {
           <Transition name="fade">
             <div v-if="restoreState === 'success'" class="status status--ok">
               Timers restored successfully.
+            </div>
+          </Transition>
+
+          <hr class="card-divider" />
+
+          <div class="card-row">
+            <div class="card-info">
+              <span class="card-label">Import from clipboard</span>
+              <span class="card-desc">Paste a dpaste URL or share link from your clipboard.</span>
+            </div>
+            <button class="action-btn action-btn--ghost" :disabled="clipboardState === 'loading'"
+              @click="importFromClipboard">
+              {{ clipboardState === 'loading' ? 'Importing…' : 'Import' }}
+            </button>
+          </div>
+
+          <Transition name="fade">
+            <div v-if="clipboardState === 'success'" class="status status--ok">
+              Imported successfully.
             </div>
           </Transition>
         </div>
