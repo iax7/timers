@@ -21,6 +21,6 @@ minimumReleaseAgeExclude:
   - '@vue/language-core@3.3.6'
   - eslint-plugin-oxlint@1.72.0
   - oxlint@1.72.0
-  - prettier@3.9.4
+  - prettier@3.9.4 || 3.9.6
   - vite@8.1.2
   - vue-tsc@3.3.6
