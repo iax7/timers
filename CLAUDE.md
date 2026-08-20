@@ -9,10 +9,18 @@ pnpm dev          # dev server with HMR (Vite)
 pnpm build        # type-check + production build
 pnpm type-check   # vue-tsc only, no emit — fastest correctness check
 pnpm lint         # oxlint + eslint with auto-fix
+pnpm format       # prettier --write over src/
 pnpm test:unit    # Vitest
 ```
 
 `@` is aliased to `src/` throughout the codebase.
+
+Node version is pinned via `mise.toml` (Node 26) and `package.json` `engines`, not nvm/Volta.
+
+### Code style
+
+- Prettier: no semicolons, single quotes, `printWidth: 100`.
+- `pnpm lint` runs oxlint then eslint. `.oxlintrc.json` only treats the `correctness` category as an error (not oxlint's full recommended set). `eslint.config.ts` calls `buildFromOxlintConfigFile('.oxlintrc.json')` to disable ESLint rules oxlint already covers, and ends with `skipFormatting` so ESLint never fights Prettier.
 
 ## Architecture
 
@@ -43,7 +51,7 @@ Store actions: `addProtocol`, `removeProtocol`, `updateProtocol`, `resetToDefaul
 | `/` | `HomeView` | Protocol grid + create/edit form |
 | `/timer/:id` | `TimerView` | Active timer for a protocol |
 | `/settings` | `SettingsView` | Data sync + build info |
-| `/import?id=X` | `ImportView` | Auto-restore from paste ID |
+| `/import?id=X` | `ImportView` | Preview-and-confirm restore from paste ID |
 
 `TimerView`, `SettingsView`, and `ImportView` are lazy-loaded. All back navigation uses `router.push('/')` (not `router.back()`) so direct URL access always returns home.
 
@@ -67,11 +75,12 @@ Uses **`requestAnimationFrame`** (not `setInterval`) for the countdown ring. Key
 
 Supports create and edit modes via an optional `protocol?: Protocol` prop. When provided, form fields are pre-populated and `handleSave` preserves the existing `id`. A `watch(() => props.protocol, ...)` resets the form when switching between protocols in edit mode. The local `FormInterval` interface adds a `_uid` field (generated, never stored) to give each dynamic interval row a stable `v-for` key.
 
-### Data sync (`src/views/SettingsView.vue`)
+### Data sync (`src/views/SettingsView.vue`, `src/views/ImportView.vue`)
 
 - **Upload**: POSTs `interval-timer-data` to `https://dpaste.com/api/v2/`, saves returned URL to `interval-timer-data-url`
-- **Restore**: fetches `{url}.txt`, runs `parseProtocols()` for validation, writes to storage, calls `loadFromStorage()`
-- **Share link**: copy button generates `{origin}#/import?id={pasteId}` — opening this URL triggers `ImportView` which auto-restores and redirects to `/`
+- **Restore** (SettingsView): fetches `{url}.txt`, runs `parseProtocols()` for validation, writes to storage, calls `loadFromStorage()`
+- **Share link**: copy button generates `{origin}#/import?id={pasteId}`
+- **Import via link** (`ImportView`): opening the link fetches and validates the paste, then shows a preview (`status: 'preview'`) listing incoming protocols against the current count. It only writes to `localStorage` and calls `loadFromStorage()` after the user explicitly clicks "Import" (`confirmImport()`) — it does not auto-restore on load. "Cancel" routes back to `/` without changing stored data.
 
 ### PWA (`vite.config.ts`)
 
